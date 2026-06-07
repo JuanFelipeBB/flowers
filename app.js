@@ -6,6 +6,12 @@ async function drawFromJson(jsonFile) {
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
+    // Configuración para parecerse más a Turtle
+    ctx.imageSmoothingEnabled = false;
+    ctx.lineWidth = 0;
+    ctx.strokeStyle = "transparent";
+
+    // Fondo negro
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -17,14 +23,11 @@ async function drawFromJson(jsonFile) {
         });
     });
 
-    const xs = allPoints.map(p => p[0]);
-    const ys = allPoints.map(p => p[1]);
+    const minX = Math.min(...allPoints.map(p => p[0]));
+    const maxX = Math.max(...allPoints.map(p => p[0]));
 
-    const minX = Math.min(...xs);
-    const maxX = Math.max(...xs);
-
-    const minY = Math.min(...ys);
-    const maxY = Math.max(...ys);
+    const minY = Math.min(...allPoints.map(p => p[1]));
+    const maxY = Math.max(...allPoints.map(p => p[1]));
 
     const width = maxX - minX;
     const height = maxY - minY;
@@ -39,22 +42,27 @@ async function drawFromJson(jsonFile) {
 
     regions.forEach(region => {
 
-        const color = `rgb(
-            ${Math.round(region.color[0])},
-            ${Math.round(region.color[1])},
-            ${Math.round(region.color[2])}
-        )`;
+        const color = `rgb(${Math.round(region.color[0])},
+                           ${Math.round(region.color[1])},
+                           ${Math.round(region.color[2])})`;
+
+        const points = region.contour;
+
+        if (!points || points.length < 3) {
+            return;
+        }
 
         ctx.beginPath();
 
-        region.contour.forEach((point, index) => {
+        points.forEach((point, index) => {
 
             const x =
                 (point[0] - centerX) * scale +
                 canvas.width / 2;
 
+            // Misma inversión Y que Turtle
             const y =
-                (centerY - point[1]) * scale +
+                (point[1] - centerY) * scale +
                 canvas.height / 2;
 
             if (index === 0) {
@@ -68,7 +76,9 @@ async function drawFromJson(jsonFile) {
 
         ctx.fillStyle = color;
         ctx.fill();
+
+        // NO usar stroke()
     });
 }
 
-drawFromJson("lirio.json");
+drawFromJson("rosas.json");
