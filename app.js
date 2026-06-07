@@ -16,19 +16,26 @@ async function drawFromJson(jsonFile) {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const allPoints = [];
+    let minX = Infinity;
+    let maxX = -Infinity;
 
-    regions.forEach(region => {
-        region.contour.forEach(point => {
-            allPoints.push(point);
-        });
-    });
+    let minY = Infinity;
+    let maxY = -Infinity;
 
-    const minX = Math.min(...allPoints.map(p => p[0]));
-    const maxX = Math.max(...allPoints.map(p => p[0]));
+    for (const region of regions) {
 
-    const minY = Math.min(...allPoints.map(p => p[1]));
-    const maxY = Math.max(...allPoints.map(p => p[1]));
+        for (const point of region.contour) {
+
+            const x = point[0];
+            const y = point[1];
+
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+        }
+    }
 
     const width = maxX - minX;
     const height = maxY - minY;
@@ -74,13 +81,13 @@ async function drawFromJson(jsonFile) {
 
         lines.push(line);
 
-        lines.forEach((l, i) => {
+        for (let i = 0; i < lines.length; i++) {
             ctx.fillText(
-                l,
+                lines[i],
                 x,
                 y + i * lineHeight
             );
-        });
+        }
     }
 
     function animate() {
@@ -93,7 +100,7 @@ async function drawFromJson(jsonFile) {
             drawWrappedText(
                 ctx,
                 "Sé que no todo lo tenemos resuelto, y que el momento que vivimos " + 
-                "puede causar mucha insertidumbre, pero hay algo que siempre me alienta a no "+
+                "puede causar mucha incertidumbre, pero hay algo que siempre me alienta a no "+
                 "querer renunciar a lo nuestro, por eso, esta rosa para ti, con todo mi amor, "+
                 "mi estimada ❤️",
                 canvas.width / 2,
@@ -162,7 +169,9 @@ async function drawFromJson(jsonFile) {
 
             ctx.beginPath();
 
-            points.forEach((point, index) => {
+            for (let index = 0; index < points.length; index++) {
+
+                const point = points[index];
 
                 const x =
                     (point[0] - centerX) * scale +
@@ -177,7 +186,7 @@ async function drawFromJson(jsonFile) {
                 } else {
                     ctx.lineTo(x, y);
                 }
-            });
+            };
 
             ctx.closePath();
 
