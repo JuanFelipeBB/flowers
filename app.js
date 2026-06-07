@@ -3,15 +3,16 @@ async function drawFromJson(jsonFile) {
     const response = await fetch(jsonFile);
     const regions = await response.json();
 
+    // Opcional: dibujar primero las regiones grandes
+    regions.sort((a, b) => b.area - a.area);
+
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
 
-    // Configuración para parecerse más a Turtle
     ctx.imageSmoothingEnabled = false;
     ctx.lineWidth = 0;
     ctx.strokeStyle = "transparent";
 
-    // Fondo negro
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -40,45 +41,105 @@ async function drawFromJson(jsonFile) {
     const centerX = (minX + maxX) / 2;
     const centerY = (minY + maxY) / 2;
 
-    regions.forEach(region => {
+    // Cantidad de regiones dibujadas por frame
+    const POINTS_PER_FRAME = 30;
 
-        const color = `rgb(${Math.round(region.color[0])},
-                           ${Math.round(region.color[1])},
-                           ${Math.round(region.color[2])})`;
+    let currentRegion = 0;
+    let currentPoint = 0;
 
-        const points = region.contour;
+    function animate() {
 
-        if (!points || points.length < 3) {
+        if (currentRegion >= regions.length) {
             return;
         }
 
-        ctx.beginPath();
+        const region = regions[currentRegion];
+        const points = region.contour;
 
-        points.forEach((point, index) => {
+        if (!points || points.length < 2) {
+            currentRegion++;
+            currentPoint = 0;
+            requestAnimationFrame(animate);
+            return;
+        }
 
-            const x =
-                (point[0] - centerX) * scale +
+        const color = `rgb(
+            ${region.color[0]},
+            ${region.color[1]},
+            ${region.color[2]}
+        )`;
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+
+        for (
+            let i = 0;
+            i < POINTS_PER_FRAME &&
+            currentPoint < points.length - 1;
+            i++
+        ) {
+
+            const p1 = points[currentPoint];
+            const p2 = points[currentPoint + 1];
+
+            const x1 =
+                (p1[0] - centerX) * scale +
                 canvas.width / 2;
 
-            // Misma inversión Y que Turtle
-            const y =
-                (point[1] - centerY) * scale +
+            const y1 =
+                (p1[1] - centerY) * scale +
                 canvas.height / 2;
 
-            if (index === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        });
+            const x2 =
+                (p2[0] - centerX) * scale +
+                canvas.width / 2;
 
-        ctx.closePath();
+            const y2 =
+                (p2[1] - centerY) * scale +
+                canvas.height / 2;
 
-        ctx.fillStyle = color;
-        ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
 
-        // NO usar stroke()
-    });
+            currentPoint++;
+        }
+
+        if (currentPoint >= points.length - 1) {
+
+            ctx.beginPath();
+
+            points.forEach((point, index) => {
+
+                const x =
+                    (point[0] - centerX) * scale +
+                    canvas.width / 2;
+
+                const y =
+                    (point[1] - centerY) * scale +
+                    canvas.height / 2;
+
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+
+            ctx.closePath();
+
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            currentRegion++;
+            currentPoint = 0;
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    animate();
 }
 
 drawFromJson("rosas.json");
