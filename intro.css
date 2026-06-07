@@ -1,0 +1,20 @@
+body {
+    margin: 0;
+    background: black;
+    overflow: hidden;
+}
+
+#overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: black;
+}
+
+#startBtn {
+    font-size: 28px;
+    padding: 20px 40px;
+    cursor: pointer;
+}

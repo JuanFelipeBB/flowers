@@ -42,14 +42,66 @@ async function drawFromJson(jsonFile) {
     const centerY = (minY + maxY) / 2;
 
     // Cantidad de regiones dibujadas por frame
-    const POINTS_PER_FRAME = 30;
+    const POINTS_PER_FRAME = 20;
 
     let currentRegion = 0;
     let currentPoint = 0;
 
+    function drawWrappedText(
+        ctx,
+        text,
+        x,
+        y,
+        maxWidth,
+        lineHeight
+    ) {
+        const words = text.split(" ");
+        let line = "";
+        let lines = [];
+
+        for (let n = 0; n < words.length; n++) {
+
+            const testLine = line + words[n] + " ";
+            const metrics = ctx.measureText(testLine);
+
+            if (metrics.width > maxWidth && n > 0) {
+                lines.push(line);
+                line = words[n] + " ";
+            } else {
+                line = testLine;
+            }
+        }
+
+        lines.push(line);
+
+        lines.forEach((l, i) => {
+            ctx.fillText(
+                l,
+                x,
+                y + i * lineHeight
+            );
+        });
+    }
+
     function animate() {
 
         if (currentRegion >= regions.length) {
+
+            ctx.fillStyle = "white";
+            ctx.font = "26px serif";
+            ctx.textAlign = "center";
+            drawWrappedText(
+                ctx,
+                "Sé que no todo lo tenemos resuelto, y que el momento que vivimos " + 
+                "puede causar mucha insertidumbre, pero hay algo que siempre me alienta a no "+
+                "querer renunciar a lo nuestro, por eso, esta rosa para ti, con todo mi amor, "+
+                "mi estimada ❤️",
+                canvas.width / 2,
+                canvas.height - 180,
+                canvas.width * 0.8,
+                36
+            );
+
             return;
         }
 
@@ -142,4 +194,23 @@ async function drawFromJson(jsonFile) {
     animate();
 }
 
-drawFromJson("rosas.json");
+document
+.getElementById("startBtn")
+.addEventListener("click", async () => {
+
+    const music =
+        document.getElementById("bgMusic");
+
+    music.volume = 0.6;
+
+    try {
+        await music.play();
+    } catch (err) {
+        console.error(err);
+    }
+
+    document.getElementById("startBtn")
+        .style.display = "none";
+
+    drawFromJson("rosas.json");
+});
